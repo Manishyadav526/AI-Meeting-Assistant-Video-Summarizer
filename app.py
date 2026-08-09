@@ -13,6 +13,9 @@ from core.rag_engine import build_rag_chain, ask_question
 
 load_dotenv()
 
+print("APP STARTED")
+st.write("APP STARTED")
+
 # ─── Page Config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Video Assistant",
