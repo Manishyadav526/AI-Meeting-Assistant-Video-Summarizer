@@ -2,4 +2,7 @@ venv/
 .env
 __pycache__/
 *.pyc
+
+downloades/
 downloads/
+vector_db/

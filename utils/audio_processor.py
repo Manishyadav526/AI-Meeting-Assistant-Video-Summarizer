@@ -1,12 +1,8 @@
-# It is used to download videos or audio from YouTube and many other websites.
 import yt_dlp
-
-# It is used to work with audio files (cut, merge, convert, etc.)
 from pydub import AudioSegment
-
 import os
 
-DOWNLOAD_DIR = "downloads"
+DOWNLOAD_DIR = "downloades"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
@@ -15,7 +11,6 @@ def download_youtube_audio(url: str) -> str:
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": output_path,
-        "ffmpeg_location": r"C:\Users\manis\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.2-full_build\bin",
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -23,7 +18,6 @@ def download_youtube_audio(url: str) -> str:
                 "preferredquality": "192",
             }
         ],
-        # Don't show download progress in the terminal.
         "quiet": True,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -32,9 +26,6 @@ def download_youtube_audio(url: str) -> str:
             ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
         )
     return filename
-
-
-data = download_youtube_audio("https://www.youtube.com/watch?v=tYKrORILFOg")
 
 
 def convert_to_wav(input_path: str) -> str:
@@ -46,4 +37,31 @@ def convert_to_wav(input_path: str) -> str:
     return output_path
 
 
-print(convert_to_wav(data))
+def chunk_audio(wav_path: str, chunk_minutes: int = 10) -> list:
+    audio = AudioSegment.from_wav(wav_path)
+    chunk_ms = chunk_minutes * 60 * 1000
+
+    chunks = []
+
+    for i, start in enumerate(range(0, len(audio), chunk_ms)):
+        chunk = audio[start : start + chunk_ms]
+        chunk_path = f"{wav_path}_chunk_{i}.wav"
+        chunk.export(chunk_path, format="wav")
+
+        chunks.append(chunk_path)
+
+    return chunks
+
+
+def process_input(source: str) -> list:
+    if source.startswith("http://") or source.startswith("https://"):
+        print("Detected YouTube URL. Downloading audio...")
+        wav_path = download_youtube_audio(source)
+    else:
+        print("Detected local file. Converting to WAV...")
+        wav_path = convert_to_wav(source)
+
+    print("Chunking audio...")
+    chunks = chunk_audio(wav_path)
+    print(f"Audio ready — {len(chunks)} chunk(s) created.")
+    return chunks
